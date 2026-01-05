@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "langchain-antigravity"
+version = "0.1.0"
+description = "LangChain ChatModel for Google Antigravity API - Access Gemini 3 and Claude models via OAuth"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+keywords = ["langchain", "antigravity", "gemini", "claude", "google", "llm", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "langchain-core>=0.2.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.scripts]
+ag-auth = "langchain_antigravity.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+only-include = ["__init__.py", "auth.py", "chat_model.py", "cli.py", "constants.py", "schema.py"]
+
+[tool.hatch.build.targets.wheel.sources]
+"" = "langchain_antigravity"
