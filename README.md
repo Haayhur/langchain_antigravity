@@ -1,8 +1,8 @@
 # LangChain Antigravity
 
-Access **Gemini 3** and **Claude** models via Google's Antigravity API using LangChain.
+Access **Gemini 3**, **Claude** models via Google's Antigravity API, and **GPT-5.x/Codex** models via OpenAI's ChatGPT backend using LangChain.
 
-This package provides a native Python LangChain `ChatModel` that authenticates with Google OAuth, allowing you to use models like `gemini-3-flash`, `gemini-3-pro-high`, and `claude-sonnet-4-5` in your LangChain applications.
+This package provides native Python LangChain `ChatModel` implementations with OAuth authentication for both Google's Antigravity API and OpenAI's Codex backend, allowing you to use models like `gemini-3-flash`, `gpt-5.2-codex`, `claude-sonnet-4-5`, and more in your LangChain applications.
 
 ## Installation
 
@@ -15,7 +15,9 @@ pip install -e .
 
 ## Quick Start
 
-### 1. Authenticate
+### Option A: Google Antigravity (Gemini 3 & Claude models)
+
+#### 1. Authenticate
 
 ```bash
 ag-auth login
@@ -23,7 +25,7 @@ ag-auth login
 
 This opens your browser to sign in with Google. Credentials are stored locally.
 
-### 2. Use in LangChain
+#### 2. Use in LangChain
 
 ```python
 from langchain_antigravity import ChatAntigravity
@@ -33,9 +35,31 @@ response = chat.invoke("Hello! What's 2 + 2?")
 print(response.content)
 ```
 
+### Option B: OpenAI Codex (GPT-5.x & Codex models)
+
+#### 1. Authenticate
+
+```bash
+codex-auth login
+```
+
+This opens your browser to sign in with ChatGPT/OpenAI. Credentials are stored locally.
+
+#### 2. Use in LangChain
+
+```python
+from langchain_antigravity import ChatCodex
+
+chat = ChatCodex(model="gpt-5.2-codex")
+response = chat.invoke("Hello! What's 2 + 2?")
+print(response.content)
+```
+
 ## Available Models
 
-### Gemini 3 Models
+### Google Antigravity Models (via `ag-auth login`)
+
+#### Gemini 3 Models
 
 | Model | Description |
 |-------|-------------|
@@ -43,7 +67,7 @@ print(response.content)
 | `antigravity-gemini-3-pro-low` | Pro model with low thinking budget |
 | `antigravity-gemini-3-pro-high` | Pro model with high thinking budget |
 
-### Claude Models
+#### Claude Models
 
 | Model | Description |
 |-------|-------------|
@@ -54,6 +78,24 @@ print(response.content)
 | `antigravity-claude-opus-4-5-thinking-low` | Opus with 8K thinking budget |
 | `antigravity-claude-opus-4-5-thinking-medium` | Opus with 16K thinking budget |
 | `antigravity-claude-opus-4-5-thinking-high` | Opus with 32K thinking budget |
+
+### OpenAI Codex Models (via `codex-auth login`)
+
+#### GPT-5.2 Models
+
+| Model | Description |
+|-------|-------------|
+| `gpt-5.2` | GPT-5.2 general purpose (none/low/medium/high/xhigh) |
+| `gpt-5.2-codex` | GPT-5.2 Codex with reasoning (low/medium/high/xhigh) |
+
+#### GPT-5.1 Models
+
+| Model | Description |
+|-------|-------------|
+| `gpt-5.1` | GPT-5.1 general purpose (none/low/medium/high) |
+| `gpt-5.1-codex-max` | GPT-5.1 Codex Max with frontend design focus |
+| `gpt-5.1-codex` | GPT-5.1 Codex (low/medium/high) |
+| `gpt-5.1-codex-mini` | GPT-5.1 Codex Mini (medium/high) |
 
 ## Features
 
@@ -111,6 +153,8 @@ ag-auth logout user@gmail.com
 
 ## CLI Commands
 
+### Google Antigravity Commands (`ag-auth`)
+
 | Command | Description |
 |---------|-------------|
 | `ag-auth login` | Authenticate with Google |
@@ -119,15 +163,31 @@ ag-auth logout user@gmail.com
 | `ag-auth accounts --set EMAIL` | Set active account |
 | `ag-auth status` | Check authentication status |
 
+### OpenAI Codex Commands (`codex-auth`)
+
+| Command | Description |
+|---------|-------------|
+| `codex-auth login` | Authenticate with ChatGPT/OpenAI |
+| `codex-auth logout [account-id]` | Remove an account |
+| `codex-auth accounts` | List authenticated accounts |
+| `codex-auth accounts --set ACCOUNT_ID` | Set active account |
+| `codex-auth status` | Check authentication status |
+
 ## Configuration
 
-Credentials are stored in:
+### Google Antigravity Credentials
+Stored in:
 - **Windows**: `%APPDATA%\langchain-antigravity\accounts.json`
 - **Linux/Mac**: `~/.config/langchain-antigravity/accounts.json`
 
+### OpenAI Codex Credentials
+Stored in:
+- **Windows**: `%APPDATA%\langchain-antigravity\codex\accounts.json`
+- **Linux/Mac**: `~/.config/langchain-antigravity/codex/accounts.json`
+
 ## API Reference
 
-### ChatAntigravity
+### ChatAntigravity (Google Antigravity)
 
 ```python
 ChatAntigravity(
@@ -139,8 +199,22 @@ ChatAntigravity(
 )
 ```
 
+### ChatCodex (OpenAI Codex)
+
+```python
+ChatCodex(
+    model: str = "gpt-5.2-codex",             # Model name
+    temperature: float = None,                       # Sampling temperature
+    max_tokens: int = None,                         # Max output tokens
+    reasoning_effort: str = None,                   # Reasoning effort: none/low/medium/high/xhigh
+    auth: CodexAuth = None,                        # Optional auth override
+    account_id: str = None,                          # Optional account ID
+)
+```
+
 ### Methods
 
+Both `ChatAntigravity` and `ChatCodex` support:
 - `invoke(messages)` - Generate a response
 - `stream(messages)` - Stream a response
 - `bind_tools(tools)` - Bind tools for function calling
@@ -159,9 +233,13 @@ ag-auth login
 
 ## Credits
 
-This package is a Python port of the authentication and API logic from [opencode-antigravity-auth](https://github.com/NoeFabris/opencode-antigravity-auth) by [@NoeFabris](https://github.com/NoeFabris).
+This package is a Python port combining authentication and API logic from:
 
-The original TypeScript plugin enables OpenCode to authenticate with Google's Antigravity API. This Python package brings the same functionality to LangChain applications.
+1. **opencode-antigravity-auth** by [@NoeFabris](https://github.com/NoeFabris) - Enables OpenCode to authenticate with Google's Antigravity API for Gemini 3 and Claude models.
+
+2. **opencode-openai-codex-auth** by [@numman-ali](https://github.com/numman-ali) - Enables OpenCode to authenticate with OpenAI's ChatGPT backend for GPT-5.x and Codex models.
+
+The original TypeScript plugins bring these functionalities to OpenCode. This Python package combines both and brings the same capabilities to LangChain applications.
 
 ## License
 

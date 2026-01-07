@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "langchain-antigravity"
-version = "0.1.0"
-description = "LangChain ChatModel for Google Antigravity API - Access Gemini 3 and Claude models via OAuth"
+version = "0.2.0"
+description = "LangChain ChatModel for Google Antigravity and OpenAI Codex APIs - Access Gemini 3, Claude, GPT-5.x, and Codex models via OAuth"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-keywords = ["langchain", "antigravity", "gemini", "claude", "google", "llm", "ai"]
+keywords = ["langchain", "antigravity", "gemini", "claude", "google", "openai", "codex", "gpt-5", "llm", "ai"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -35,10 +35,11 @@ dev = [
 
 [project.scripts]
 ag-auth = "langchain_antigravity.cli:main"
+codex-auth = "langchain_antigravity.codex_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
-only-include = ["__init__.py", "auth.py", "chat_model.py", "cli.py", "constants.py", "schema.py"]
+only-include = ["__init__.py", "auth.py", "chat_model.py", "cli.py", "constants.py", "schema.py", "codex_auth.py", "codex_chat_model.py", "codex_cli.py"]
 
 [tool.hatch.build.targets.wheel.sources]
 "" = "langchain_antigravity"

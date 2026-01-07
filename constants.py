@@ -97,3 +97,70 @@ GEMINI_THINKING_LEVELS = {
     "low": "THINKING_LEVEL_LOW",
     "high": "THINKING_LEVEL_MAX",
 }
+
+# OpenAI Codex OAuth Constants
+CODEX_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
+CODEX_AUTHORIZE_URL = "https://auth.openai.com/oauth/authorize"
+CODEX_TOKEN_URL = "https://auth.openai.com/oauth/token"
+CODEX_REDIRECT_URI = "http://localhost:1455/auth/callback"
+CODEX_SCOPE = "openid profile email offline_access"
+CODEX_BASE_URL = "https://chatgpt.com/backend-api"
+CODEX_DUMMY_API_KEY = "chatgpt-oauth"
+
+CODEX_HEADERS = {
+    "OpenAI-Beta": "responses=experimental",
+    "originator": "codex_cli_rs",
+}
+
+# ChatGPT Codex backend requires an `instructions` string in the request body.
+# The official Codex CLI fetches model-specific instructions; we provide a small
+# built-in default to keep the integration functional without extra network calls.
+CODEX_DEFAULT_INSTRUCTIONS = "You are Codex, a helpful coding assistant."
+
+CODEX_MODEL_MAPPINGS = {
+    "gpt-5.2": "gpt-5.2",
+    "gpt-5.2-none": "gpt-5.2",
+    "gpt-5.2-low": "gpt-5.2",
+    "gpt-5.2-medium": "gpt-5.2",
+    "gpt-5.2-high": "gpt-5.2",
+    "gpt-5.2-xhigh": "gpt-5.2",
+    "gpt-5.2-codex": "gpt-5.2-codex",
+    "gpt-5.2-codex-low": "gpt-5.2-codex",
+    "gpt-5.2-codex-medium": "gpt-5.2-codex",
+    "gpt-5.2-codex-high": "gpt-5.2-codex",
+    "gpt-5.2-codex-xhigh": "gpt-5.2-codex",
+    "gpt-5.1-codex-max": "gpt-5.1-codex-max",
+    "gpt-5.1-codex-max-low": "gpt-5.1-codex-max",
+    "gpt-5.1-codex-max-medium": "gpt-5.1-codex-max",
+    "gpt-5.1-codex-max-high": "gpt-5.1-codex-max",
+    "gpt-5.1-codex-max-xhigh": "gpt-5.1-codex-max",
+    "gpt-5.1-codex": "gpt-5.1-codex",
+    "gpt-5.1-codex-low": "gpt-5.1-codex",
+    "gpt-5.1-codex-medium": "gpt-5.1-codex",
+    "gpt-5.1-codex-high": "gpt-5.1-codex",
+    "gpt-5.1-codex-mini": "gpt-5.1-codex-mini",
+    "gpt-5.1-codex-mini-medium": "gpt-5.1-codex-mini",
+    "gpt-5.1-codex-mini-high": "gpt-5.1-codex-mini",
+    "gpt-5.1": "gpt-5.1",
+    "gpt-5.1-none": "gpt-5.1",
+    "gpt-5.1-low": "gpt-5.1",
+    "gpt-5.1-medium": "gpt-5.1",
+    "gpt-5.1-high": "gpt-5.1",
+    "gpt-5-codex": "gpt-5.1-codex",
+    "gpt-5-codex-low": "gpt-5.1-codex",
+    "gpt-5-codex-medium": "gpt-5.1-codex",
+    "gpt-5-codex-high": "gpt-5.1-codex",
+    "gpt-5-codex-mini": "gpt-5.1-codex-mini",
+    "gpt-5": "gpt-5.1",
+    "gpt-5-none": "gpt-5.1",
+    "gpt-5-low": "gpt-5.1",
+    "gpt-5-medium": "gpt-5.1",
+    "gpt-5-high": "gpt-5.1",
+    "gpt-5-mini": "gpt-5.1",
+    "gpt-5-nano": "gpt-5.1",
+    "codex-mini-latest": "gpt-5.1-codex-mini",
+}
+
+# Antigravity model prefixes for identification
+ANTIGRAVITY_MODEL_PREFIX = "antigravity-"
+CODEX_MODEL_PREFIX = "openai/"
