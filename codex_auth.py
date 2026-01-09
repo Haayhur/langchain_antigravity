@@ -20,18 +20,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
-
-from .constants import (
-    CODEX_CLIENT_ID,
-    CODEX_AUTHORIZE_URL,
-    CODEX_TOKEN_URL,
-    CODEX_REDIRECT_URI,
-    CODEX_SCOPE,
-    CODEX_BASE_URL,
-    CODEX_DUMMY_API_KEY,
-    CODEX_HEADERS,
-    CODEX_MODEL_MAPPINGS,
-)
+try:
+    from . import constants
+except ImportError:  # pragma: no cover
+    import constants  # type: ignore
 
 
 @dataclass
@@ -160,9 +152,9 @@ def authorize_codex() -> tuple[str, str, str]:
 
     params = {
         "response_type": "code",
-        "client_id": CODEX_CLIENT_ID,
-        "redirect_uri": CODEX_REDIRECT_URI,
-        "scope": CODEX_SCOPE,
+        "client_id": constants.CODEX_CLIENT_ID,
+        "redirect_uri": constants.CODEX_REDIRECT_URI,
+        "scope": constants.CODEX_SCOPE,
         "code_challenge": challenge,
         "code_challenge_method": "S256",
         "state": state,
@@ -388,4 +380,4 @@ def remove_codex_account(account_id: str) -> bool:
 
 def normalize_codex_model(model: str) -> str:
     """Normalize model name to Codex backend format."""
-    return CODEX_MODEL_MAPPINGS.get(model, model)
+    return constants.CODEX_MODEL_MAPPINGS.get(model, model)

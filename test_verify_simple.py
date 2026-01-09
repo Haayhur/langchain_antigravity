@@ -91,13 +91,24 @@ except Exception as e:
 # Test 4: Chat Models
 print("\n[TEST 4] Chat Models")
 try:
+    def get_field_default(model_cls, field_name: str):
+        # Pydantic v2
+        if hasattr(model_cls, "model_fields"):
+            return model_cls.model_fields[field_name].default
+        # Pydantic v1
+        if hasattr(model_cls, "__fields__"):
+            return model_cls.__fields__[field_name].default
+        raise AttributeError(f"Could not locate field metadata for: {field_name}")
+
     assert hasattr(chat_model, 'ChatAntigravity')
-    assert chat_model.ChatAntigravity.model.default == "antigravity-gemini-3-flash"
-    print(f"  [PASS] ChatAntigrav with default: {chat_model.ChatAntigravity.model.default}")
+    antigrav_default = get_field_default(chat_model.ChatAntigravity, "model")
+    assert antigrav_default == "antigravity-gemini-3-flash"
+    print(f"  [PASS] ChatAntigrav with default: {antigrav_default}")
 
     assert hasattr(codex_chat_model, 'ChatCodex')
-    assert codex_chat_model.ChatCodex.model.default == "gpt-5.2-codex"
-    print(f"  [PASS] ChatCodex with default: {codex_chat_model.ChatCodex.model.default}")
+    codex_default = get_field_default(codex_chat_model.ChatCodex, "model")
+    assert codex_default == "gpt-5.2-codex"
+    print(f"  [PASS] ChatCodex with default: {codex_default}")
 
     tests_passed += 2
 except Exception as e:

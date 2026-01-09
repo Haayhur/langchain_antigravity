@@ -8,6 +8,7 @@ Antigravity API, allowing access to Gemini 3 and Claude models.
 from __future__ import annotations
 
 import json
+import secrets
 import time
 from typing import Any, AsyncIterator, Literal
 
@@ -26,26 +27,14 @@ from langchain_core.messages import (
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
 
-from .auth import (
-    AntigravityAuth,
-    load_auth_from_storage,
-    refresh_access_token,
-)
-from .constants import (
-    ANTIGRAVITY_ENDPOINT_FALLBACKS,
-    ANTIGRAVITY_HEADERS,
-    GEMINI_CLI_HEADERS,
-    ANTIGRAVITY_DEFAULT_PROJECT_ID,
-    DEFAULT_THINKING_BUDGET,
-    THINKING_BUDGETS,
-    GEMINI_THINKING_LEVELS,
-    MODEL_MAPPINGS,
-    CLAUDE_TOOL_SYSTEM_INSTRUCTION,
-)
-from .schema import (
-    clean_json_schema_for_antigravity,
-    format_parameter_signature,
-)
+try:
+    from . import auth as antigravity_auth
+    from .auth import AntigravityAuth
+except ImportError:  # pragma: no cover
+    import auth as antigravity_auth  # type: ignore
+    from auth import AntigravityAuth  # type: ignore
+import constants
+import schema
 
 
 def is_claude_model(model: str) -> bool:
@@ -62,14 +51,14 @@ def is_thinking_model(model: str) -> bool:
 def resolve_model_name(model: str) -> str:
     """Resolve model alias to actual API model name."""
     # Check direct mapping
-    if model in MODEL_MAPPINGS:
-        return MODEL_MAPPINGS[model]
+    if model in constants.MODEL_MAPPINGS:
+        return constants.MODEL_MAPPINGS[model]
     
     # Handle antigravity- prefix
     if model.startswith("antigravity-"):
         base = model[len("antigravity-"):]
-        if base in MODEL_MAPPINGS:
-            return MODEL_MAPPINGS[base]
+        if base in constants.MODEL_MAPPINGS:
+            return constants.MODEL_MAPPINGS[base]
     
     return model
 
@@ -77,24 +66,32 @@ def resolve_model_name(model: str) -> str:
 def get_thinking_config(model: str) -> dict[str, Any] | None:
     """Get thinking configuration for a model."""
     lower = model.lower()
-    
-    # Claude thinking models need explicit budget
+
     if "claude" in lower and "thinking" in lower:
         if "low" in lower:
-            budget = THINKING_BUDGETS["low"]
+            budget = constants.THINKING_BUDGETS["low"]
         elif "high" in lower:
-            budget = THINKING_BUDGETS["high"]
+            budget = constants.THINKING_BUDGETS["high"]
         else:
-            budget = THINKING_BUDGETS["medium"]
-        
+            budget = constants.THINKING_BUDGETS["medium"]
+
         return {
-            "thinkingBudget": budget,
-            "includeThoughts": True,
+            "thinking_budget": budget,
+            "include_thoughts": True,
         }
-    
-    # Gemini 3 models have thinking by default - no explicit config needed
-    # Adding thinkingConfig causes 400 errors
-    
+
+    if "gemini-3" in lower:
+        if "flash" in lower:
+            level = "minimal"
+        elif "high" in lower:
+            level = "high"
+        else:
+            level = "low"
+        return {
+            "includeThoughts": True,
+            "thinkingLevel": level,
+        }
+
     return None
 
 
@@ -172,12 +169,12 @@ class ChatAntigravity(BaseChatModel):
                 schema = {}
                 if hasattr(tool, "args_schema") and tool.args_schema:
                     schema = tool.args_schema.model_json_schema()
-                    schema = clean_json_schema_for_antigravity(schema)
+                    schema = schema.clean_json_schema_for_antigravity(schema)
                 
                 # Add parameter signature to description
                 description = tool.description
                 if schema.get("properties"):
-                    sig = format_parameter_signature(
+                    sig = schema.format_parameter_signature(
                         schema["properties"],
                         schema.get("required", []),
                     )
@@ -200,7 +197,7 @@ class ChatAntigravity(BaseChatModel):
     async def _ensure_auth(self) -> AntigravityAuth:
         """Ensure we have valid authentication."""
         if self.auth is None:
-            self.auth = load_auth_from_storage()
+            self.auth = antigravity_auth.load_auth_from_storage()
         
         if self.auth is None:
             raise ValueError(
@@ -209,7 +206,7 @@ class ChatAntigravity(BaseChatModel):
             )
         
         if self.auth.is_expired():
-            self.auth = await refresh_access_token(self.auth)
+            self.auth = await antigravity_auth.refresh_access_token(self.auth)
         
         return self.auth
     
@@ -299,7 +296,7 @@ class ChatAntigravity(BaseChatModel):
     ) -> dict[str, Any]:
         """Build the Antigravity request body."""
         effective_model = resolve_model_name(self.model)
-        project_id = self.project_id or (self.auth.project_id if self.auth else None) or ANTIGRAVITY_DEFAULT_PROJECT_ID
+        project_id = self.project_id or (self.auth.project_id if self.auth else None) or constants.ANTIGRAVITY_DEFAULT_PROJECT_ID
         
         # Build generation config
         generation_config: dict[str, Any] = {}
@@ -316,25 +313,26 @@ class ChatAntigravity(BaseChatModel):
         # Build request
         request: dict[str, Any] = {
             "contents": contents,
+            "sessionId": f"session-{secrets.token_hex(16)}",
         }
-        
+
         if generation_config:
             request["generationConfig"] = generation_config
-        
+
         if system_instruction:
             # Add Claude tool hardening if tools are present
             if self._tools and is_claude_model(self.model):
                 system_text = system_instruction["parts"][0].get("text", "")
                 system_instruction = {
-                    "parts": [{"text": f"{system_text}\n\n{CLAUDE_TOOL_SYSTEM_INSTRUCTION}"}]
+                    "parts": [{"text": f"{system_text}\n\n{constants.CLAUDE_TOOL_SYSTEM_INSTRUCTION}"}]
                 }
             request["systemInstruction"] = system_instruction
         elif self._tools and is_claude_model(self.model):
             # Add tool hardening as system instruction if no system message
             request["systemInstruction"] = {
-                "parts": [{"text": CLAUDE_TOOL_SYSTEM_INSTRUCTION}]
+                "parts": [{"text": constants.CLAUDE_TOOL_SYSTEM_INSTRUCTION}]
             }
-        
+
         if self._tools:
             request["tools"] = [{"functionDeclarations": self._tools}]
             # Claude requires VALIDATED mode for tool calling
@@ -344,12 +342,15 @@ class ChatAntigravity(BaseChatModel):
                         "mode": "VALIDATED",
                     }
                 }
-        
+
         # Wrap in Antigravity envelope
         return {
             "project": project_id,
             "model": effective_model,
             "request": request,
+            "requestType": "agent",
+            "userAgent": "antigravity",
+            "requestId": f"agent-{secrets.token_hex(16)}",
         }
     
     def _parse_response(self, response_data: dict[str, Any]) -> AIMessage:
@@ -398,15 +399,18 @@ class ChatAntigravity(BaseChatModel):
         body = self._build_request_body(contents, system_instruction)
         
         header_style = get_header_style(self.model)
-        headers = ANTIGRAVITY_HEADERS if header_style == "antigravity" else GEMINI_CLI_HEADERS
+        headers = constants.ANTIGRAVITY_HEADERS if header_style == "antigravity" else constants.GEMINI_CLI_HEADERS
         headers = {
             **headers,
             "Authorization": f"Bearer {auth.access_token}",
             "Content-Type": "application/json",
         }
+
+        if is_thinking_model(self.model) and is_claude_model(self.model):
+            headers["anthropic-beta"] = "interleaved-thinking-2025-05-14"
         
         async with httpx.AsyncClient(timeout=120.0) as client:
-            for endpoint in ANTIGRAVITY_ENDPOINT_FALLBACKS:
+            for endpoint in constants.ANTIGRAVITY_ENDPOINT_FALLBACKS:
                 url = f"{endpoint}/v1internal:generateContent"
                 
                 try:
@@ -462,16 +466,19 @@ class ChatAntigravity(BaseChatModel):
         body = self._build_request_body(contents, system_instruction)
         
         header_style = get_header_style(self.model)
-        headers = ANTIGRAVITY_HEADERS if header_style == "antigravity" else GEMINI_CLI_HEADERS
+        headers = constants.ANTIGRAVITY_HEADERS if header_style == "antigravity" else constants.GEMINI_CLI_HEADERS
         headers = {
             **headers,
             "Authorization": f"Bearer {auth.access_token}",
             "Content-Type": "application/json",
             "Accept": "text/event-stream",
         }
+
+        if is_thinking_model(self.model) and is_claude_model(self.model):
+            headers["anthropic-beta"] = "interleaved-thinking-2025-05-14"
         
         async with httpx.AsyncClient(timeout=120.0) as client:
-            for endpoint in ANTIGRAVITY_ENDPOINT_FALLBACKS:
+            for endpoint in constants.ANTIGRAVITY_ENDPOINT_FALLBACKS:
                 url = f"{endpoint}/v1internal:streamGenerateContent?alt=sse"
                 
                 try:

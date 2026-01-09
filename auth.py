@@ -21,15 +21,26 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
 
-from .constants import (
-    ANTIGRAVITY_CLIENT_ID,
-    ANTIGRAVITY_CLIENT_SECRET,
-    ANTIGRAVITY_REDIRECT_URI,
-    ANTIGRAVITY_SCOPES,
-    ANTIGRAVITY_HEADERS,
-    ANTIGRAVITY_LOAD_ENDPOINTS,
-    ANTIGRAVITY_DEFAULT_PROJECT_ID,
-)
+try:
+    from .constants import (
+        ANTIGRAVITY_CLIENT_ID,
+        ANTIGRAVITY_CLIENT_SECRET,
+        ANTIGRAVITY_REDIRECT_URI,
+        ANTIGRAVITY_SCOPES,
+        ANTIGRAVITY_HEADERS,
+        ANTIGRAVITY_LOAD_ENDPOINTS,
+        ANTIGRAVITY_DEFAULT_PROJECT_ID,
+    )
+except ImportError:  # pragma: no cover
+    from constants import (  # type: ignore
+        ANTIGRAVITY_CLIENT_ID,
+        ANTIGRAVITY_CLIENT_SECRET,
+        ANTIGRAVITY_REDIRECT_URI,
+        ANTIGRAVITY_SCOPES,
+        ANTIGRAVITY_HEADERS,
+        ANTIGRAVITY_LOAD_ENDPOINTS,
+        ANTIGRAVITY_DEFAULT_PROJECT_ID,
+    )
 
 
 @dataclass

@@ -28,20 +28,36 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 from langchain_core.tools import BaseTool
 from pydantic import Field
 
-from .codex_auth import (
-    CodexAuth,
-    extract_account_id,
-    load_codex_auth_from_storage,
-    refresh_codex_token,
-    normalize_codex_model,
-)
-from .constants import (
-    CODEX_BASE_URL,
-    CODEX_DUMMY_API_KEY,
-    CODEX_HEADERS,
-    CODEX_MODEL_MAPPINGS,
-)
-from .codex_prompts import get_codex_instructions
+try:
+    from .codex_auth import (
+        CodexAuth,
+        extract_account_id,
+        load_codex_auth_from_storage,
+        refresh_codex_token,
+        normalize_codex_model,
+    )
+    from .constants import (
+        CODEX_BASE_URL,
+        CODEX_DUMMY_API_KEY,
+        CODEX_HEADERS,
+        CODEX_MODEL_MAPPINGS,
+    )
+    from .codex_prompts import get_codex_instructions
+except ImportError:  # pragma: no cover
+    from codex_auth import (  # type: ignore
+        CodexAuth,
+        extract_account_id,
+        load_codex_auth_from_storage,
+        refresh_codex_token,
+        normalize_codex_model,
+    )
+    from constants import (  # type: ignore
+        CODEX_BASE_URL,
+        CODEX_DUMMY_API_KEY,
+        CODEX_HEADERS,
+        CODEX_MODEL_MAPPINGS,
+    )
+    from codex_prompts import get_codex_instructions  # type: ignore
 
 
 class ChatCodex(BaseChatModel):

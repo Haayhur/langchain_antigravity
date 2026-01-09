@@ -6,10 +6,16 @@ Ported from opencode-antigravity-auth/src/plugin/request-helpers.ts
 
 from typing import Any
 
-from .constants import (
-    EMPTY_SCHEMA_PLACEHOLDER_NAME,
-    EMPTY_SCHEMA_PLACEHOLDER_DESCRIPTION,
-)
+try:
+    from .constants import (
+        EMPTY_SCHEMA_PLACEHOLDER_NAME,
+        EMPTY_SCHEMA_PLACEHOLDER_DESCRIPTION,
+    )
+except ImportError:  # pragma: no cover
+    from constants import (  # type: ignore
+        EMPTY_SCHEMA_PLACEHOLDER_NAME,
+        EMPTY_SCHEMA_PLACEHOLDER_DESCRIPTION,
+    )
 
 # Unsupported constraint keywords that should be moved to description hints
 UNSUPPORTED_CONSTRAINTS = [
